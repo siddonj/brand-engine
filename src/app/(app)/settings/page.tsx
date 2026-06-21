@@ -20,7 +20,6 @@ import {
   Link2,
   Copy,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 type SettingsMap = Record<string, string>;
 type ConnectionStatus = "idle" | "testing" | "ok" | "fail";
@@ -88,8 +87,6 @@ export default function SettingsPage() {
   const searchParams = useSearchParams();
 
   // AI provider
-  const [aiProvider, setAiProvider] = useState<"anthropic" | "openrouter">("anthropic");
-  const [anthropicKey, setAnthropicKey] = useState("");
   const [openrouterKey, setOpenrouterKey] = useState("");
   const [tavilyKey, setTavilyKey] = useState("");
   const [unsplashKey, setUnsplashKey] = useState("");
@@ -136,8 +133,6 @@ export default function SettingsPage() {
       .then((r) => r.json())
       .then((data: SettingsMap) => {
         if (!data) return;
-        setAiProvider((data.ai_provider as "anthropic" | "openrouter") || "anthropic");
-        setAnthropicKey(data.anthropic_api_key ? "••••••••" : "");
         setOpenrouterKey(data.openrouter_api_key ? "••••••••" : "");
         setTavilyKey(data.tavily_api_key ? "••••••••" : "");
         setUnsplashKey(data.unsplash_access_key ? "••••••••" : "");
@@ -221,15 +216,13 @@ export default function SettingsPage() {
     setSaving(true);
     try {
       const body: Record<string, string> = {
-        ai_provider: aiProvider,
         wp_url: wpUrl,
         wp_username: wpUsername,
         postiz_base_url: postizBaseUrl,
         postiz_linkedin_id: postizLinkedInId,
         linkedin_client_id: linkedinClientId,
-      linkedin_redirect_uri: linkedinRedirectUri,
+        linkedin_redirect_uri: linkedinRedirectUri,
       };
-      if (!anthropicKey.startsWith("•")) body.anthropic_api_key = anthropicKey;
       if (!openrouterKey.startsWith("•")) body.openrouter_api_key = openrouterKey;
       if (!tavilyKey.startsWith("•")) body.tavily_api_key = tavilyKey;
       if (!unsplashKey.startsWith("•")) body.unsplash_access_key = unsplashKey;
@@ -293,41 +286,9 @@ export default function SettingsPage() {
           <CardTitle className="text-sm font-semibold">AI Configuration</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-1.5">
-            <Label className="text-sm font-medium">AI Provider</Label>
-            <div className="flex gap-2">
-              {(["anthropic", "openrouter"] as const).map((p) => (
-                <button
-                  key={p}
-                  type="button"
-                  onClick={() => setAiProvider(p)}
-                  className={cn(
-                    "flex-1 py-2 px-3 rounded-md border text-sm font-medium transition-colors",
-                    aiProvider === p
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border bg-card text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  {p === "anthropic" ? "Anthropic API" : "OpenRouter"}
-                </button>
-              ))}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {aiProvider === "openrouter"
-                ? "Uses OpenRouter — access Claude and other models with separate billing."
-                : "Uses Anthropic API directly from console.anthropic.com."}
-            </p>
-          </div>
-
-          {aiProvider === "anthropic" ? (
-            <FieldRow id="anthropicKey" label="Anthropic API Key">
-              <PasswordInput id="anthropicKey" value={anthropicKey} onChange={setAnthropicKey} placeholder="sk-ant-..." />
-            </FieldRow>
-          ) : (
-            <FieldRow id="openrouterKey" label="OpenRouter API Key" helper="Get your key at openrouter.ai/keys">
-              <PasswordInput id="openrouterKey" value={openrouterKey} onChange={setOpenrouterKey} placeholder="sk-or-..." />
-            </FieldRow>
-          )}
+          <FieldRow id="openrouterKey" label="OpenRouter API Key" helper="Get your key at openrouter.ai/keys">
+            <PasswordInput id="openrouterKey" value={openrouterKey} onChange={setOpenrouterKey} placeholder="sk-or-..." />
+          </FieldRow>
 
           <FieldRow id="tavilyKey" label="Tavily API Key" helper="Used by the Research Agent for web search">
             <PasswordInput id="tavilyKey" value={tavilyKey} onChange={setTavilyKey} placeholder="tvly-..." />
