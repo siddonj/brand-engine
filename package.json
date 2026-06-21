@@ -10,7 +10,6 @@
     "db:migrate": "npx tsx src/lib/db/migrate.ts"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.105.0",
     "@base-ui/react": "^1.6.0",
     "@composio/core": "^0.11.0",
     "@libsql/client": "^0.17.4",
