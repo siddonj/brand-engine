@@ -1,7 +1,11 @@
 import { runAgent, AgentTool } from "./runner";
+import { db, schema } from "@/lib/db";
 
 async function tavilySearch(query: string): Promise<string> {
-  const apiKey = process.env.TAVILY_API_KEY;
+  const rows = await db.select().from(schema.settings);
+  const s: Record<string, string> = {};
+  for (const r of rows) s[r.key] = r.value;
+  const apiKey = s.tavily_api_key || process.env.TAVILY_API_KEY;
   if (!apiKey) throw new Error("TAVILY_API_KEY not set");
 
   const response = await fetch("https://api.tavily.com/search", {
