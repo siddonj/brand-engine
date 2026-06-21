@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -81,10 +81,27 @@ function FieldRow({ id, label, helper, children }: {
   );
 }
 
+function OAuthNotifier() {
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    const connected = searchParams.get("linkedin_connected");
+    const error = searchParams.get("linkedin_error");
+    if (connected === "1") toast.success("LinkedIn connected successfully!");
+    if (error) {
+      fetch("/api/settings")
+        .then(r => r.json())
+        .then((d: SettingsMap) => {
+          const msg = d.linkedin_last_error || "Token exchange failed";
+          toast.error(msg, { duration: 15000 });
+        });
+    }
+  }, [searchParams]);
+  return null;
+}
+
 export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const searchParams = useSearchParams();
 
   // AI provider
   const [openrouterKey, setOpenrouterKey] = useState("");
@@ -111,22 +128,6 @@ export default function SettingsPage() {
   const [linkedinConnectedName, setLinkedinConnectedName] = useState("");
   const [linkedinStatus, setLinkedinStatus] = useState<ConnectionStatus>("idle");
   const [linkedinStatusLabel, setLinkedinStatusLabel] = useState("");
-
-  useEffect(() => {
-    // Handle redirect back from OAuth
-    const connected = searchParams.get("linkedin_connected");
-    const error = searchParams.get("linkedin_error");
-    if (connected === "1") toast.success("LinkedIn connected successfully!");
-    if (error) {
-      // Fetch the stored error message
-      fetch("/api/settings")
-        .then(r => r.json())
-        .then((d: SettingsMap) => {
-          const msg = d.linkedin_last_error || "Token exchange failed";
-          toast.error(msg, { duration: 15000 });
-        });
-    }
-  }, [searchParams]);
 
   useEffect(() => {
     fetch("/api/settings")
@@ -269,6 +270,7 @@ export default function SettingsPage() {
 
   return (
     <div className="p-6 space-y-6 max-w-2xl">
+      <Suspense fallback={null}><OAuthNotifier /></Suspense>
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
