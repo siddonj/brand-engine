@@ -44,22 +44,28 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const body = await req.json() as Record<string, string>;
+  try {
+    const body = await req.json() as Record<string, string>;
 
-  for (const [key, value] of Object.entries(body)) {
-    if (!ALLOWED_KEYS.includes(key)) continue;
-    if (value === "••••••••") continue;
+    for (const [key, value] of Object.entries(body)) {
+      if (!ALLOWED_KEYS.includes(key)) continue;
+      if (value === "••••••••") continue;
 
-    await db
-      .insert(schema.settings)
-      .values({ key, value, updatedAt: new Date().toISOString() })
-      .onConflictDoUpdate({
-        target: schema.settings.key,
-        set: { value, updatedAt: new Date().toISOString() },
-      });
+      await db
+        .insert(schema.settings)
+        .values({ key, value, updatedAt: new Date().toISOString() })
+        .onConflictDoUpdate({
+          target: schema.settings.key,
+          set: { value, updatedAt: new Date().toISOString() },
+        });
+    }
+
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[settings POST]", message);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
-
-  return NextResponse.json({ ok: true });
 }
 
 export async function PUT(req: NextRequest) {
