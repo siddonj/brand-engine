@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "db:migrate": "npx tsx src/lib/db/migrate.ts"
+    "db:migrate": "node --env-file=.env.local ./node_modules/.bin/tsx src/lib/db/migrate.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
