@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, schema } from "@/lib/db";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { testWordPressConnection } from "@/lib/wordpress/client";
 import { testPostizConnection } from "@/lib/postiz/client";
 import { testLinkedInConnection } from "@/lib/linkedin/client";
@@ -51,13 +51,13 @@ export async function POST(req: NextRequest) {
       if (!ALLOWED_KEYS.includes(key)) continue;
       if (value === "••••••••") continue;
 
-      await db
-        .insert(schema.settings)
-        .values({ key, value, updatedAt: new Date().toISOString() })
-        .onConflictDoUpdate({
-          target: schema.settings.key,
-          set: { value, updatedAt: new Date().toISOString() },
-        });
+      await db.run(sql`
+        INSERT INTO settings (key, value, updated_at)
+        VALUES (${key}, ${value}, ${new Date().toISOString()})
+        ON CONFLICT (key) DO UPDATE SET
+          value = excluded.value,
+          updated_at = excluded.updated_at
+      `);
     }
 
     return NextResponse.json({ ok: true });
