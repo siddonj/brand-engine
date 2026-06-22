@@ -23,3 +23,7 @@ export const db = new Proxy({} as DrizzleInstance, {
 });
 
 export { schema };
+
+export async function execute(statement: string, args: (string | number | null)[]): Promise<void> {
+  await getClient().execute({ sql: statement, args });
+}
