@@ -1,4 +1,4 @@
-import { db, schema } from "@/lib/db";
+import { db, schema, execute } from "@/lib/db";
 
 const BASE = "https://api.linkedin.com";
 
@@ -10,10 +10,10 @@ async function getSettings(): Promise<Record<string, string>> {
 }
 
 async function saveSetting(key: string, value: string) {
-  await db
-    .insert(schema.settings)
-    .values({ key, value, updatedAt: new Date().toISOString() })
-    .onConflictDoUpdate({ target: schema.settings.key, set: { value, updatedAt: new Date().toISOString() } });
+  await execute(
+    "INSERT INTO settings (key, value, updated_at) VALUES (?, ?, ?) ON CONFLICT (key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at",
+    [key, value, new Date().toISOString()]
+  );
 }
 
 export async function getValidAccessToken(): Promise<string> {

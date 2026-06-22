@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, schema } from "@/lib/db";
+import { db, schema, execute } from "@/lib/db";
 
 async function save(key: string, value: string) {
-  await db
-    .insert(schema.settings)
-    .values({ key, value, updatedAt: new Date().toISOString() })
-    .onConflictDoUpdate({ target: schema.settings.key, set: { value, updatedAt: new Date().toISOString() } });
+  await execute(
+    "INSERT INTO settings (key, value, updated_at) VALUES (?, ?, ?) ON CONFLICT (key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at",
+    [key, value, new Date().toISOString()]
+  );
 }
 
 export async function GET(req: NextRequest) {
@@ -17,9 +17,7 @@ export async function GET(req: NextRequest) {
   const rows = await db.select().from(schema.settings);
   const allParams = Object.fromEntries(searchParams.entries());
   // Store raw callback params temporarily in DB for debugging
-  await db.insert(schema.settings)
-    .values({ key: "linkedin_last_error", value: `callback params: ${JSON.stringify(allParams)}`, updatedAt: new Date().toISOString() })
-    .onConflictDoUpdate({ target: schema.settings.key, set: { value: `callback params: ${JSON.stringify(allParams)}`, updatedAt: new Date().toISOString() } });
+  await save("linkedin_last_error", `callback params: ${JSON.stringify(allParams)}`);
   const s: Record<string, string> = {};
   for (const row of rows) s[row.key] = row.value;
 
